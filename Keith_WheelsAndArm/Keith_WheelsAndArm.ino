@@ -10,6 +10,7 @@ boards from 2 to 6, allowing for all 6 of Keith's wheels to be controlled
 independently. We added a robotic arm and the Arduino shield board that
 powers and controls the servos that move the robotic arm.
 
+MET students designed and 3D printed a suspension system for Keith.
 */
 
 /* Message from 2023 CCCC EET senior project class:
