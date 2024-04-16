@@ -56,6 +56,17 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define LOWER_STOP_RANGE_TURN -20
 #define UPPER_STOP_RANGE_TURN 20
 
+#define BASE_SERVO 0
+#define SHOULDER_SERVO 1
+#define ELBOW_SERVO 2
+#define WRIST_SERVO 3
+#define CLAW_SERVO 4
+
+#define X_MAX 2000
+#define X_MIN 1000
+#define Y_MAX 2000
+#define Y_MIN 1000
+
 // our servo # counter
 uint8_t servonum = 0;
 
@@ -71,14 +82,16 @@ boolean stop_state = true;
 const int leftPin = 7;
 const int rightPin = 8;
 
+/*
 // variables in which to store the pulse width info coming from the remote
 // to be used to control the robotic arm
 int ch3; 
 int ch4; 
+*/
 
 // servo movement variables
-int moveValue;
-int turnValue;
+int xPos = 0;
+int yPos = 0;
 
 /*
 defining pins for six motor driver boards...
@@ -131,6 +144,12 @@ const int RR_Prwm = 42;
 const int RR_Lpwm = 43;
 
 void setup() {
+   // this is code for driving the robot
+  // initialize the left and right signal pins as inputs
+  // (signals for/from remote control receiver)
+  pinMode(leftPin, INPUT);
+  pinMode(rightPin, INPUT);
+
   // this is code for the robotic arm
   pinMode(Channel3, INPUT);
   pinMode(Channel4, INPUT);
@@ -139,11 +158,7 @@ void setup() {
   pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
   //delay(10);
 
-  // this is code for driving the robot
-  // initialize the left and right signal pins as inputs
-  // (signals for/from remote control receiver)
-  pinMode(leftPin, INPUT);
-  pinMode(rightPin, INPUT);
+ 
   
   // initialize the motor driver pins as outputs
   pinMode(LF_R_En, OUTPUT);
@@ -187,29 +202,32 @@ void loop() {
 
   // read the duration of the pulse on the right signal pin
   int rightPulseDuration = pulseIn(rightPin, HIGH);
+  
+  // read the duration of the pulses that control robotic arm
+  int ch3 = pulseIn(Channel3, HIGH); 
+  int ch4 = pulseIn(Channel4, HIGH);
 
   // print the pulse durations for debugging
-  Serial.print("\nLeft: ");
+ /* Serial.print("\nLeft: ");
   Serial.print(leftPulseDuration);
   Serial.print("\nRight: ");
-  Serial.print(rightPulseDuration);
+  Serial.print(rightPulseDuration);*/
   /* END DRIVING */
 
 /* ROBOTIC ARM STUFF */
-  // read the duration of the pulses that control robotic arm
-  ch3 = pulseIn(Channel3, HIGH, 25000); 
-  ch4 = pulseIn(Channel4, HIGH, 25000);
-
-  moveValue = map(ch4, 980, 1999, 150, 1999); //center over zero
-  moveValue = constrain(moveValue, 150, 1999);
+  
+  xPos = map(ch3, 980, 1999, 150, 1999); //center over zero
+  xPos = constrain(xPos, 150, 1999);
                                    
-  turnValue = map(ch4, 980, 1999, 600, 2400);
-  turnValue = constrain(turnValue, 600, 2400);
-  //Serial.println("ch3 = " + String(ch3));
-  //Serial.println("ch4 = " + String(ch4));
-  Serial.println("turnValue = " + String(turnValue));
-  Serial.println("moveValue = " + String(moveValue));
- 
+  yPos = map(ch4, 980, 1999, 600, 2400);
+  yPos = constrain(yPos, 600, 2400);
+
+  Serial.println("xPos = " + String(ch3));
+  Serial.println("yPos = " + String(ch4) + "\n");
+
+  moveArm(xPos, yPos);
+
+ /* NEWER OLD
  for (int i = 0; i < 10; i++) {
   // Example of moving the end effector to different positions
     calculateServoAngles(100, 50, 150); // Move to position (100, 50, 150)
@@ -219,7 +237,8 @@ void loop() {
     calculateServoAngles(0, 0, 150); // Move to position (0, 0, 150)
     delay(1000);
  }
-/* OLD
+ */
+/* OLDER OLD
   pwm.setPWM(0, 0, turnValue);
   pwm.setPWM(0, 0, moveValue);
   pwm.setPWM(1, 0, turnValue);
@@ -242,6 +261,8 @@ void loop() {
     if (rightPulseDuration < 1500 && rightPulseDuration > 1496) {
       // both signals are low, stop the robot
       Serial.println("\nStop");
+      int leftPulseDuration = pulseIn(leftPin, LOW);
+      int rightPulseDuration = pulseIn(rightPin, LOW);
       digitalWrite(LF_R_En, LOW);
       digitalWrite(LF_L_En, LOW);
       digitalWrite(RF_R_En, LOW);
@@ -471,6 +492,8 @@ else if (leftPulseDuration < 990 && leftPulseDuration > 980) {
 // for the robotic arm
 // you can use this function if you'd like to set the pulse length in seconds
 // e.g. setServoPulse(0, 0.001) is a ~1 millisecond pulse width. It's not precise!
+
+/* NEWER OLD
 void setServoPulse(uint8_t n, double pulse) {
   double pulselength;
   
@@ -510,5 +533,24 @@ void calculateServoAngles(float x, float y, float z) {
 
 float toDegrees(float rad) {
   return rad * 180 / PI;
+}
+*/
+
+void moveArm(int x, int y) {
+  double L1 = 40.0; // Length of the first arm
+  double L2 = 30.0; // Length of the second arm
+
+  double angle1_rad = atan2(y, x); // Calculate the angle of the base servo
+  double D = sqrt(sq(x) + sq(y));
+  double angle2_rad = acos((sq(L1) + sq(L2) - sq(D)) / (2 * L1 * L2)); // Calculate the angle of the shoulder servo
+  double angle3_rad = acos((sq(D) + sq(L1) - sq(L2)) / (2 * D * L1)); // Calculate the angle of the elbow servo
+
+  int baseAngle = map(angle1_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX); // Convert angles to servo values
+  int shoulderAngle = map(angle2_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
+  int elbowAngle = map(angle3_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
+
+  pwm.setPWM(BASE_SERVO, 0, baseAngle); // Move the servos to the calculated positions
+  pwm.setPWM(SHOULDER_SERVO, 0, shoulderAngle);
+  pwm.setPWM(ELBOW_SERVO, 0, elbowAngle);
 }
 

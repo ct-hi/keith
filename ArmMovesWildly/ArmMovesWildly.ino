@@ -59,8 +59,8 @@ uint8_t servonum = 0;
 #define UPPER_STOP_RANGE_TURN 20
 
 // RF receiver pins for robotic arm, left stick on remote control
-const int Channel3 = 9;
-const int Channel4 = 10;
+const int Channel4 = 9;
+const int Channel5 = 10;
 
 // from servo arm tutorial, currently unused?
 boolean stop_state = true;
@@ -76,8 +76,8 @@ int turnValue;
 void setup() {
 
   /* RECEIVER CODE */
-  pinMode(Channel3, INPUT); //7
-  pinMode(Channel4, INPUT); //8
+  pinMode(Channel4, INPUT); //7
+  pinMode(Channel5, INPUT); //8
   
   Serial.begin(9600);
 
@@ -127,8 +127,8 @@ void loop() {
 
 /* RECEIVER CODE */
  // Read the pulse width of each channel
-  ch3 = pulseIn(Channel3, HIGH, 25000); 
-  ch4 = pulseIn(Channel4, HIGH, 25000);
+  ch3 = pulseIn(Channel4, HIGH, 25000); 
+  ch4 = pulseIn(Channel5, HIGH, 25000);
   
   moveValue = map(ch3, 980, 1999, 150, 1999); //center over zero
   moveValue = constrain(moveValue, 150, 1999);

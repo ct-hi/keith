@@ -1,0 +1,45 @@
+% llm how to get multiple pulseIn values to an arduino without blocking the timely execution of the program
+One way to get multiple pulseIn values to an Arduino without blocking the timely execution of the program is to use interrupts. 
+
+You can set up an interrupt service routine (ISR) to read the pulseIn values whenever a pulse is detected on a specific pin. This way, the program doesn't have to constantly check the input pin for pulses, allowing it to continue running other tasks.
+
+Here's a simple example of how you can use interrupts to read pulseIn values:
+
+1. Set up the pins and variables:
+```cpp
+int pulsePin1 = 2;
+int pulsePin2 = 3;
+
+volatile unsigned long pulseTime1 = 0;
+volatile unsigned long pulseTime2 = 0;
+```
+
+2. Set up the interrupt service routines:
+```cpp
+void pulse_ISR1() {
+  if (digitalRead(pulsePin1) == HIGH) {
+    pulseTime1 = micros();
+  }
+}
+
+void pulse_ISR2() {
+  if (digitalRead(pulsePin2) == HIGH) {
+    pulseTime2 = micros();
+  }
+}
+```
+
+3. Attach the interrupt service routines to the pins:
+```cpp
+attachInterrupt(digitalPinToInterrupt(pulsePin1), pulse_ISR1, CHANGE);
+attachInterrupt(digitalPinToInterrupt(pulsePin2), pulse_ISR2, CHANGE);
+```
+
+4. Use the values in your main loop:
+```cpp
+void loop() {
+  // Use pulseTime1 and pulseTime2 for further processing
+}
+```
+
+With this setup, whenever a pulse is detected on either of the pins, the corresponding pulseTime variable will be updated in the interrupt service routines. This allows the main loop to continue running without being blocked by pulseIn calls.
