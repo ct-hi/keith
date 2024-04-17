@@ -56,11 +56,11 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define LOWER_STOP_RANGE_TURN -20
 #define UPPER_STOP_RANGE_TURN 20
 
-#define BASE_SERVO 0
-#define SHOULDER_SERVO 1
-#define ELBOW_SERVO 2
-#define WRIST_SERVO 3
-#define CLAW_SERVO 4
+#define BASE_SERVO 1
+#define SHOULDER_SERVO 2
+#define ELBOW_SERVO 3
+#define WRIST_SERVO 4
+#define CLAW_SERVO 5
 
 #define X_MAX 2000
 #define X_MIN 1000
