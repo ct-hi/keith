@@ -56,11 +56,13 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define LOWER_STOP_RANGE_TURN -20
 #define UPPER_STOP_RANGE_TURN 20
 
-#define BASE_SERVO 1
-#define SHOULDER_SERVO 2
-#define ELBOW_SERVO 3
-#define WRIST_SERVO 4
-#define CLAW_SERVO 5
+#define ELBOW2_SERVO 0
+#define CLAW_SERVO 1
+#define PRONATION_SERVO 2
+#define WRIST_SERVO 3
+#define ELBOW_SERVO 4
+#define SHOULDER_SERVO 5
+#define BASE_SERVO 6
 
 #define X_MAX 2000
 #define X_MIN 1000
@@ -222,8 +224,8 @@ void loop() {
   yPos = map(ch4, 980, 1999, 600, 2400);
   yPos = constrain(yPos, 600, 2400);
 
-  Serial.println("xPos = " + String(ch3));
-  Serial.println("yPos = " + String(ch4) + "\n");
+  //Serial.println("xPos = " + String(ch3));
+  //Serial.println("yPos = " + String(ch4) + "\n");
 
   moveArm(xPos, yPos);
 
@@ -540,7 +542,7 @@ void moveArm(int x, int y) {
   double L1 = 40.0; // Length of the first arm
   double L2 = 30.0; // Length of the second arm
 
-  double angle1_rad = atan2(y, x); // Calculate the angle of the base servo
+  double angle1_rad = atan2(x, y); // Calculate the angle of the base servo
   double D = sqrt(sq(x) + sq(y));
   double angle2_rad = acos((sq(L1) + sq(L2) - sq(D)) / (2 * L1 * L2)); // Calculate the angle of the shoulder servo
   double angle3_rad = acos((sq(D) + sq(L1) - sq(L2)) / (2 * D * L1)); // Calculate the angle of the elbow servo
@@ -549,8 +551,16 @@ void moveArm(int x, int y) {
   int shoulderAngle = map(angle2_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
   int elbowAngle = map(angle3_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
 
-  pwm.setPWM(BASE_SERVO, 0, baseAngle); // Move the servos to the calculated positions
-  pwm.setPWM(SHOULDER_SERVO, 0, shoulderAngle);
-  pwm.setPWM(ELBOW_SERVO, 0, elbowAngle);
+  //pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
+  //pwm.setPWM(WRIST_SERVO, 0, baseAngle);
+  //pwm.setPWM(ELBOW_SERVO, 0, baseAngle);
+  //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
+  pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
+  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
+  //pwm.setPWM(BASE_SERVO, 0, baseAngle);
+
+  Serial.println("baseAngle = " + String(baseAngle) + "\n");
+  //Serial.println("shoulderAngle = " + String(shoulderAngle) + "\n");
+  //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
 }
 
