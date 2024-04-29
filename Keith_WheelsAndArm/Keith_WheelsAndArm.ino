@@ -1,9 +1,8 @@
-/*********** SERVO INCLUDES ***********/
-#include <Wire.h>                     
-#include <Adafruit_PWMServoDriver.h> 
-/********* END SERVO INCLUDES *********/
+#include <Wire.h>                     // libraries needed for
+#include <Adafruit_PWMServoDriver.h>  // robotic arm
 
-/* Message from 2024 CCCC MET & EET senior project class:
+/* 
+# Message from 2024 CCCC MET & EET senior project class:
 
 EET students Dale, Dawson, and Charles increased the number of motor driver
 boards from 2 to 6, allowing for all 6 of Keith's wheels to be controlled
@@ -11,9 +10,8 @@ independently. We added a robotic arm and the Arduino shield board that
 powers and controls the servos that move the robotic arm.
 
 MET students designed and 3D printed a suspension system for Keith.
-*/
 
-/* Message from 2023 CCCC EET senior project class:
+# Message from 2023 CCCC EET senior project class:
 
 This program should be on the arduino board inside KEITH already.
 The main problem that KEITH has is the inability to move all four directions.
@@ -34,16 +32,17 @@ Good Luck
 -Rob
 */
 
-// defining servo variables and constants
+// declare a variable 'pwm' to use with Adafruit servo library functions
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 // servo library provided by Adafruit, info here: 
 // https://learn.adafruit.com/16-channel-pwm-servo-driver/using-the-adafruit-library
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 /* OLD
 #define SERVOMIN  150 // This is the 'minimum' pulse length count (out of 4096)
 #define SERVOMAX  4096 // This is the 'maximum' pulse length count (out of 4096)
 */
-//NEW
+
+// variables and constants for robotic arm
 #define SERVOMIN  150 // this is the 'minimum' pulse length count (out of 4096)
 #define SERVOMAX  600 // this is the 'maximum' pulse length count (out of 4096)
 
@@ -76,6 +75,8 @@ uint8_t servonum = 0;
 // define pins for servo controls (left remote control stick)
 const int Channel3 = 9;
 const int Channel4 = 10;
+const int Channel5 = 11;
+const int Channel6 = 12;
 
 // from servo arm tutorial, currently unused?
 boolean stop_state = true;
@@ -83,6 +84,9 @@ boolean stop_state = true;
 // define pins for robot driving controls (right remote control stick)
 const int leftPin = 7;
 const int rightPin = 8;
+
+// define pin to tie high +5V to power servo shield board
+const int servoPowerPin = 13;
 
 /*
 // variables in which to store the pulse width info coming from the remote
@@ -115,7 +119,7 @@ const int LF_L_En = 29;
 const int LF_Prwm = 30;
 const int LF_Lpwm = 31;
 
-// right front
+// right front motor driver board
 const int RF_R_En = 32;
 const int RF_L_En = 33;
 const int RF_Prwm = 34;
@@ -133,20 +137,20 @@ const int RM_L_En = 27;
 const int RM_Prwm = 4;
 const int RM_Lpwm = 5;
 
-// left rear
+// left rear motor driver board
 const int LR_R_En = 36;
 const int LR_L_En = 37;
 const int LR_Prwm = 38;
 const int LR_Lpwm = 39;
 
-// right rear
+// right rear motor driver board
 const int RR_R_En = 40;
 const int RR_L_En = 41;
 const int RR_Prwm = 42;
 const int RR_Lpwm = 43;
 
 void setup() {
-   // this is code for driving the robot
+  // this is code for driving the robot
   // initialize the left and right signal pins as inputs
   // (signals for/from remote control receiver)
   pinMode(leftPin, INPUT);
@@ -155,12 +159,12 @@ void setup() {
   // this is code for the robotic arm
   pinMode(Channel3, INPUT);
   pinMode(Channel4, INPUT);
+  pinMode(Channel5, INPUT);
+  pinMode(Channel6, INPUT);
   pwm.begin();
   pwm.setOscillatorFrequency(27000000);
   pwm.setPWMFreq(SERVO_FREQ);  // Analog servos run at ~50 Hz updates
   //delay(10);
-
- 
   
   // initialize the motor driver pins as outputs
   pinMode(LF_R_En, OUTPUT);
@@ -193,6 +197,10 @@ void setup() {
   pinMode(RR_Prwm, OUTPUT);
   pinMode(RR_Lpwm, OUTPUT);
 
+  // Power the servo shield board
+  pinMode(servoPowerPin, OUTPUT);
+  digitalWrite(servoPowerPin, HIGH);
+
   // set up serial communication for debugging
   Serial.begin(9600);
 }
@@ -204,26 +212,28 @@ void loop() {
 
   // read the duration of the pulse on the right signal pin
   int rightPulseDuration = pulseIn(rightPin, HIGH);
-  
+ 
+ 
+  // print the pulse durations for debugging
+  Serial.print("\nLeft: ");
+  Serial.print(leftPulseDuration);
+  Serial.print("\nRight: ");
+  Serial.print(rightPulseDuration);
+
+  /* ROBOTIC ARM STUFF */
   // read the duration of the pulses that control robotic arm
   int ch3 = pulseIn(Channel3, HIGH); 
   int ch4 = pulseIn(Channel4, HIGH);
+  int ch5 = pulseIn(Channel5, HIGH);
+  int ch6 = pulseIn(Channel6, HIGH);
 
-  // print the pulse durations for debugging
- /* Serial.print("\nLeft: ");
-  Serial.print(leftPulseDuration);
-  Serial.print("\nRight: ");
-  Serial.print(rightPulseDuration);*/
-  /* END DRIVING */
-
-/* ROBOTIC ARM STUFF */
-  
-  xPos = map(ch3, 980, 1999, 150, 1999); //center over zero
+  xPos = map(ch6, 980, 1999, 150, 1999); //center over zero
   xPos = constrain(xPos, 150, 1999);
-                                   
-  yPos = map(ch4, 980, 1999, 600, 2400);
+  //xPos = constrain(xPos, 300, 3400);                                   
+  yPos = map(ch6, 980, 1999, 600, 2400);
   yPos = constrain(yPos, 600, 2400);
-
+  //Serial.println("channel 5 = " + String(ch5));
+  //Serial.println("channel 6 = " + String(ch6));
   //Serial.println("xPos = " + String(ch3));
   //Serial.println("yPos = " + String(ch4) + "\n");
 
@@ -254,13 +264,19 @@ void loop() {
   pwm.setPWM(5, 0, turnValue);
   pwm.setPWM(5, 0, moveValue);
   */
-
-  /* END ROBOTIC ARM */
   
   /* MORE DRIVING THE ROBOT STUFF */
+  /*
+  The remote control transmitter sends a number between 900 and 2000 for the
+  up-and-down position of a stick, and another number between 900 and 200
+  for the left-and-right position of a stick.
+
+  We use these number ranges to make decisions on how to control the robotic
+  arm and how the remote control should make Keith's wheels spin.
+  */
   // determine which direction the robot should move based on the pulse durations
-  if (leftPulseDuration < 1480 && leftPulseDuration > 1466) {
-    if (rightPulseDuration < 1500 && rightPulseDuration > 1496) {
+  if (leftPulseDuration < 1505 && leftPulseDuration > 1495) {
+    if (rightPulseDuration < 1500 && rightPulseDuration > 1490) {
       // both signals are low, stop the robot
       Serial.println("\nStop");
       int leftPulseDuration = pulseIn(leftPin, LOW);
@@ -293,41 +309,8 @@ void loop() {
     }
   }
 
-  else if (leftPulseDuration < 1485 && leftPulseDuration > 1475) {
-    if (rightPulseDuration < 1990 && rightPulseDuration > 1980) {
-      // both signals are high, move the robot forward
-      Serial.println("\nForward");
-
-      digitalWrite(LF_R_En, HIGH);
-      digitalWrite(LF_L_En, HIGH);
-      digitalWrite(RF_R_En, HIGH);
-      digitalWrite(RF_L_En, HIGH);
-      digitalWrite(LM_R_En, HIGH);
-      digitalWrite(LM_L_En, HIGH);
-      digitalWrite(RM_R_En, HIGH);
-      digitalWrite(RM_L_En, HIGH);
-      digitalWrite(LR_R_En, HIGH);
-      digitalWrite(LR_L_En, HIGH);
-      digitalWrite(RR_R_En, HIGH);
-      digitalWrite(RR_L_En, HIGH);
-
-      analogWrite(LF_Prwm, 255);
-      analogWrite(LF_Lpwm, 0);
-      analogWrite(RF_Prwm, 0);
-      analogWrite(RF_Lpwm, 255);
-      analogWrite(LM_Prwm, 255);
-      analogWrite(LM_Lpwm, 0);
-      analogWrite(RM_Prwm, 255);
-      analogWrite(RM_Lpwm, 0);
-      analogWrite(LR_Prwm, 255);
-      analogWrite(LR_Lpwm, 0);
-      analogWrite(RR_Prwm, 0);
-      analogWrite(RR_Lpwm, 255);
-    }
-  }
-
-  else if (leftPulseDuration < 1489 && leftPulseDuration > 1480) {
-    if (rightPulseDuration < 995 && rightPulseDuration > 990) {
+  else if (leftPulseDuration < 1000 && leftPulseDuration > 985) {
+    if (rightPulseDuration < 1530 && rightPulseDuration > 1480) {
       Serial.println("\nBackward");
       digitalWrite(LF_R_En, HIGH);
       digitalWrite(LF_L_En, HIGH);
@@ -357,8 +340,8 @@ void loop() {
     }
 }
 
-else if (leftPulseDuration < 1000 && leftPulseDuration > 975) {
-  if (rightPulseDuration < 1500 && rightPulseDuration > 1300) {
+else if (leftPulseDuration < 1525 && leftPulseDuration > 1480) {
+  if (rightPulseDuration < 1000 && rightPulseDuration > 985) {
       // Spin the robot left
       Serial.println("\nSpin Left");
 
@@ -387,12 +370,9 @@ else if (leftPulseDuration < 1000 && leftPulseDuration > 975) {
     analogWrite(LR_Lpwm, 255);
     analogWrite(RR_Prwm, 0);
     analogWrite(RR_Lpwm, 255);
-      
     }
-}
 
- else if (leftPulseDuration < 1975 && leftPulseDuration > 1965) {
-    if (rightPulseDuration < 1505 && rightPulseDuration > 1495) {
+    if (rightPulseDuration < 2000 && rightPulseDuration > 1975) {
     // turn spin the robot right
     Serial.println("\nSpin Right");
     digitalWrite(LF_R_En, HIGH);
@@ -423,10 +403,10 @@ else if (leftPulseDuration < 1000 && leftPulseDuration > 975) {
   }
 }
 
-else if (leftPulseDuration < 990 && leftPulseDuration > 980) {
-    if (rightPulseDuration < 1000 && rightPulseDuration > 990) {
+else if (leftPulseDuration < 2000 && leftPulseDuration > 1975) {
+    if (rightPulseDuration < 1000 && rightPulseDuration > 975) {
     // turn the robot left
-    Serial.println("\nLeft");
+    Serial.println("\nLeft\n");
 
     digitalWrite(LF_R_En, LOW);
     digitalWrite(LF_L_En, LOW);
@@ -443,21 +423,48 @@ else if (leftPulseDuration < 990 && leftPulseDuration > 980) {
 
     analogWrite(LF_Prwm, 0);
     analogWrite(LF_Lpwm, 0);
-    analogWrite(RF_Prwm, 255);
-    analogWrite(RF_Lpwm, 0);
+    analogWrite(RF_Prwm, 0);
+    analogWrite(RF_Lpwm, 255);
     analogWrite(LM_Prwm, 0);
     analogWrite(LM_Lpwm, 0);
     analogWrite(RM_Prwm, 255);
     analogWrite(RM_Lpwm, 0);
     analogWrite(LR_Prwm, 0);
     analogWrite(LR_Lpwm, 0);
-    analogWrite(RR_Prwm, 255);
-    analogWrite(RR_Lpwm, 0);
+    analogWrite(RR_Prwm, 0);
+    analogWrite(RR_Lpwm, 255);
   }
-}
+  if (rightPulseDuration < 1500 && rightPulseDuration > 1480) {
+      // both signals are high, move the robot forward
+      Serial.println("\nForward");
 
-  else if (leftPulseDuration < 1975 && leftPulseDuration > 1966) {
-    if (rightPulseDuration < 1990 && rightPulseDuration > 1980) {
+      digitalWrite(LF_R_En, HIGH);
+      digitalWrite(LF_L_En, HIGH);
+      digitalWrite(RF_R_En, HIGH);
+      digitalWrite(RF_L_En, HIGH);
+      digitalWrite(LM_R_En, HIGH);
+      digitalWrite(LM_L_En, HIGH);
+      digitalWrite(RM_R_En, HIGH);
+      digitalWrite(RM_L_En, HIGH);
+      digitalWrite(LR_R_En, HIGH);
+      digitalWrite(LR_L_En, HIGH);
+      digitalWrite(RR_R_En, HIGH);
+      digitalWrite(RR_L_En, HIGH);
+
+      analogWrite(LF_Prwm, 255);
+      analogWrite(LF_Lpwm, 0);
+      analogWrite(RF_Prwm, 0);
+      analogWrite(RF_Lpwm, 255);
+      analogWrite(LM_Prwm, 255);
+      analogWrite(LM_Lpwm, 0);
+      analogWrite(RM_Prwm, 255);
+      analogWrite(RM_Lpwm, 0);
+      analogWrite(LR_Prwm, 255);
+      analogWrite(LR_Lpwm, 0);
+      analogWrite(RR_Prwm, 0);
+      analogWrite(RR_Lpwm, 255);
+    }
+    if (rightPulseDuration < 2000 && rightPulseDuration > 1975) {
       // left signal is low and right signal is high, turn the robot right
       Serial.println("\nRight");
     
@@ -488,7 +495,6 @@ else if (leftPulseDuration < 990 && leftPulseDuration > 980) {
       analogWrite(RR_Lpwm, 0);
     }
   }
-/* END DRIVING */
 }
 
 // for the robotic arm
@@ -551,15 +557,16 @@ void moveArm(int x, int y) {
   int shoulderAngle = map(angle2_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
   int elbowAngle = map(angle3_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
 
-  //pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
-  //pwm.setPWM(WRIST_SERVO, 0, baseAngle);
-  //pwm.setPWM(ELBOW_SERVO, 0, baseAngle);
+ pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
+ // pwm.setPWM(WRIST_SERVO, 0, baseAngle);
+ // pwm.setPWM(ELBOW_SERVO, 0, baseAngle);
   //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
-  pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
-  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
-  //pwm.setPWM(BASE_SERVO, 0, baseAngle);
+ //pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
+//pwm.setPWM(BASE_SERVO, 0, baseAngle);
 
-  Serial.println("baseAngle = " + String(baseAngle) + "\n");
+  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
+
+  //Serial.println("baseAngle = " + String(baseAngle) + "\n");
   //Serial.println("shoulderAngle = " + String(shoulderAngle) + "\n");
   //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
 }
