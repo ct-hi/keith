@@ -98,6 +98,8 @@ int ch4;
 // servo movement variables
 int xPos = 0;
 int yPos = 0;
+int xBasePos = 0;
+int yBasePos = 0;
 
 /*
 defining pins for six motor driver boards...
@@ -215,11 +217,12 @@ void loop() {
  
  
   // print the pulse durations for debugging
+  /*
   Serial.print("\nLeft: ");
   Serial.print(leftPulseDuration);
   Serial.print("\nRight: ");
   Serial.print(rightPulseDuration);
-
+  */
   /* ROBOTIC ARM STUFF */
   // read the duration of the pulses that control robotic arm
   int ch3 = pulseIn(Channel3, HIGH); 
@@ -227,16 +230,25 @@ void loop() {
   int ch5 = pulseIn(Channel5, HIGH);
   int ch6 = pulseIn(Channel6, HIGH);
 
-  xPos = map(ch6, 980, 1999, 150, 1999); //center over zero
+  xPos = map(ch5, 980, 1999, 150, 1999); //center over zero
   xPos = constrain(xPos, 150, 1999);
   //xPos = constrain(xPos, 300, 3400);                                   
-  yPos = map(ch6, 980, 1999, 600, 2400);
+  yPos = map(ch5, 980, 1999, 600, 2400);
   yPos = constrain(yPos, 600, 2400);
   //Serial.println("channel 5 = " + String(ch5));
   //Serial.println("channel 6 = " + String(ch6));
   //Serial.println("xPos = " + String(ch3));
   //Serial.println("yPos = " + String(ch4) + "\n");
-
+  xBasePos = map(ch6, 980, 1999, 150, 1999); //center over zero
+  xBasePos = constrain(xBasePos, 150, 1999);
+  //xBasePos = constrain(xBasePos, 300, 3400);                                   
+  yBasePos = map(ch6, 980, 1999, 600, 2400);
+  yBasePos = constrain(yBasePos, 600, 2400);
+  Serial.print("\nxBasePos: ");
+  Serial.print(xBasePos);
+  Serial.print("\nyBasePos: ");
+  Serial.print(yBasePos);
+  moveBase(xBasePos, xBasePos);
   moveArm(xPos, yPos);
 
  /* NEWER OLD
@@ -434,7 +446,7 @@ else if (leftPulseDuration < 2000 && leftPulseDuration > 1975) {
     analogWrite(RR_Prwm, 0);
     analogWrite(RR_Lpwm, 255);
   }
-  if (rightPulseDuration < 1500 && rightPulseDuration > 1480) {
+  if (rightPulseDuration < 1630 && rightPulseDuration > 1480) {
       // both signals are high, move the robot forward
       Serial.println("\nForward");
 
@@ -563,6 +575,33 @@ void moveArm(int x, int y) {
   //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
  //pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
 //pwm.setPWM(BASE_SERVO, 0, baseAngle);
+
+  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
+
+  //Serial.println("baseAngle = " + String(baseAngle) + "\n");
+  //Serial.println("shoulderAngle = " + String(shoulderAngle) + "\n");
+  //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
+}
+
+void moveBase(int x, int y) {
+  double L1 = 40.0; // Length of the first arm
+  double L2 = 30.0; // Length of the second arm
+
+  double angle1_rad = atan2(x, y); // Calculate the angle of the base servo
+  double D = sqrt(sq(x) + sq(y));
+  double angle2_rad = acos((sq(L1) + sq(L2) - sq(D)) / (2 * L1 * L2)); // Calculate the angle of the shoulder servo
+  double angle3_rad = acos((sq(D) + sq(L1) - sq(L2)) / (2 * D * L1)); // Calculate the angle of the elbow servo
+
+  int baseAngle = map(angle1_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX); // Convert angles to servo values
+  int shoulderAngle = map(angle2_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
+  int elbowAngle = map(angle3_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
+
+ //pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
+ // pwm.setPWM(WRIST_SERVO, 0, baseAngle);
+ // pwm.setPWM(ELBOW_SERVO, 0, baseAngle);
+  //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
+ //pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
+pwm.setPWM(BASE_SERVO, 0, baseAngle);
 
   //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
 
