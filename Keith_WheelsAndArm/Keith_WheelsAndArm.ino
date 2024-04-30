@@ -217,12 +217,11 @@ void loop() {
  
  
   // print the pulse durations for debugging
-  /*
   Serial.print("\nLeft: ");
   Serial.print(leftPulseDuration);
   Serial.print("\nRight: ");
   Serial.print(rightPulseDuration);
-  */
+  
   /* ROBOTIC ARM STUFF */
   // read the duration of the pulses that control robotic arm
   int ch3 = pulseIn(Channel3, HIGH); 
@@ -244,10 +243,12 @@ void loop() {
   //xBasePos = constrain(xBasePos, 300, 3400);                                   
   yBasePos = map(ch6, 980, 1999, 600, 2400);
   yBasePos = constrain(yBasePos, 600, 2400);
+  /*
   Serial.print("\nxBasePos: ");
   Serial.print(xBasePos);
   Serial.print("\nyBasePos: ");
   Serial.print(yBasePos);
+  */
   moveBase(xBasePos, xBasePos);
   moveArm(xPos, yPos);
 
@@ -287,8 +288,8 @@ void loop() {
   arm and how the remote control should make Keith's wheels spin.
   */
   // determine which direction the robot should move based on the pulse durations
-  if (leftPulseDuration < 1505 && leftPulseDuration > 1495) {
-    if (rightPulseDuration < 1500 && rightPulseDuration > 1490) {
+  if (leftPulseDuration < 1510 && leftPulseDuration > 1495) {
+    if (rightPulseDuration < 1500 && rightPulseDuration > 1480) {
       // both signals are low, stop the robot
       Serial.println("\nStop");
       int leftPulseDuration = pulseIn(leftPin, LOW);
@@ -352,7 +353,7 @@ void loop() {
     }
 }
 
-else if (leftPulseDuration < 1525 && leftPulseDuration > 1480) {
+else if (leftPulseDuration < 1525 && leftPulseDuration > 1410) {
   if (rightPulseDuration < 1000 && rightPulseDuration > 985) {
       // Spin the robot left
       Serial.println("\nSpin Left");
