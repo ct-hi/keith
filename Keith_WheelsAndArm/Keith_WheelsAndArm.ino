@@ -202,10 +202,10 @@ void loop() {
  
  
   // print the pulse durations for debugging
-  Serial.print("\nLeft: ");
-  Serial.print(leftPulseDuration);
-  Serial.print("\nRight: ");
-  Serial.print(rightPulseDuration);
+  // Serial.print("\nLeft: ");
+  // Serial.print(leftPulseDuration);
+  // Serial.print("\nRight: ");
+  // Serial.print(rightPulseDuration);
   
   /* ROBOTIC ARM STUFF */
   // read the duration of the pulses that control robotic arm
@@ -235,7 +235,7 @@ void loop() {
   yBasePos = map(ch4, 980, 1999, 600, 2400);
   yBasePos = constrain(yBasePos, 600, 2400);
   
-
+  int mappedClawAngle = map(ch5, 0, 1023, minAngle, maxAngle);
   int mappedAngle = map(ch6, 0, 1023, minAngle, maxAngle);  // Map the x position to the servo angle
   //mappedAngle = constrain(mappedAngle, 0, 1023);
   //Serial.println("baseAngle = " + String(mappedAngle) + "\n");
@@ -252,7 +252,7 @@ void loop() {
   Serial.print(yBasePos);
   */
   moveBase(mappedAngle);
-  moveClaw(xPos, yPos);
+  moveClaw(mappedClawAngle);
   moveArm(xArmPos, yArmPos);
 
   /* MORE DRIVING THE ROBOT STUFF */
@@ -534,31 +534,8 @@ float toDegrees(float rad) {
 }
 */
 
-void moveClaw(int x, int y) {
-  double L1 = 40.0; // Length of the first arm
-  double L2 = 30.0; // Length of the second arm
-
-  double angle1_rad = atan2(x, y); // Calculate the angle of the base servo
-  double D = sqrt(sq(x) + sq(y));
-  double angle2_rad = acos((sq(L1) + sq(L2) - sq(D)) / (2 * L1 * L2)); // Calculate the angle of the shoulder servo
-  double angle3_rad = acos((sq(D) + sq(L1) - sq(L2)) / (2 * D * L1)); // Calculate the angle of the elbow servo
-
-  int baseAngle = map(angle1_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX); // Convert angles to servo values
-  int shoulderAngle = map(angle2_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
-  int elbowAngle = map(angle3_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
-
- pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
- // pwm.setPWM(WRIST_SERVO, 0, baseAngle);
- // pwm.setPWM(ELBOW_SERVO, 0, baseAngle);
-  //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
- //pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
-//pwm.setPWM(BASE_SERVO, 0, baseAngle);
-
-  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
-
-  //Serial.println("baseAngle = " + String(baseAngle) + "\n");
-  //Serial.println("shoulderAngle = " + String(shoulderAngle) + "\n");
-  //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
+void moveClaw(int x) {
+ pwm.setPWM(CLAW_SERVO, 0, x); 
 }
 
 void moveBase(int x) {
@@ -579,11 +556,11 @@ void moveArm(int x, int y) {
   int elbowAngle = map(angle3_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
 
   //pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
-  // pwm.setPWM(WRIST_SERVO, 0, baseAngle);
+  pwm.setPWM(WRIST_SERVO, 0, shoulderAngle);
   pwm.setPWM(ELBOW_SERVO, 0, elbowAngle);
   //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
   pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
-  //pwm.setPWM(BASE_SERVO, 0, baseAngle);
+  pwm.setPWM(BASE_SERVO, 0, baseAngle);
 
   pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
 
