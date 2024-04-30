@@ -202,10 +202,10 @@ void loop() {
  
  
   // print the pulse durations for debugging
-  // Serial.print("\nLeft: ");
-  // Serial.print(leftPulseDuration);
-  // Serial.print("\nRight: ");
-  // Serial.print(rightPulseDuration);
+  Serial.print("\nLeft: ");
+  Serial.print(leftPulseDuration);
+  Serial.print("\nRight: ");
+  Serial.print(rightPulseDuration);
   
   /* ROBOTIC ARM STUFF */
   // read the duration of the pulses that control robotic arm
@@ -225,10 +225,10 @@ void loop() {
   //xPos = constrain(xPos, 300, 3400);                                   
   yPos = map(ch5, 980, 1999, 600, 2400);
   yPos = constrain(yPos, 600, 2400);
-  //Serial.println("channel 5 = " + String(ch5));
-  //Serial.println("channel 6 = " + String(ch6));
-  //Serial.println("xPos = " + String(ch3));
-  //Serial.println("yPos = " + String(ch4) + "\n");
+  // Serial.println("channel 5 = " + String(ch5));
+  // Serial.println("channel 6 = " + String(ch6));
+  // Serial.println("xPos = " + String(ch3));
+  // Serial.println("yPos = " + String(ch4) + "\n");
   xBasePos = map(ch3, 980, 1999, 150, 1999); //center over zero
   xBasePos = constrain(xBasePos, 150, 1999);
   //xBasePos = constrain(xBasePos, 300, 3400);                                   
@@ -238,7 +238,7 @@ void loop() {
 
   int mappedAngle = map(ch6, 0, 1023, minAngle, maxAngle);  // Map the x position to the servo angle
   //mappedAngle = constrain(mappedAngle, 0, 1023);
-  Serial.println("baseAngle = " + String(mappedAngle) + "\n");
+  //Serial.println("baseAngle = " + String(mappedAngle) + "\n");
   // xBasePos = map(ch6, 980, 1999, 0, 180); 
   // xBasePos = constrain(xBasePos, 0, 180); 
 
@@ -255,32 +255,6 @@ void loop() {
   moveClaw(xPos, yPos);
   moveArm(xArmPos, yArmPos);
 
- /* NEWER OLD
- for (int i = 0; i < 10; i++) {
-  // Example of moving the end effector to different positions
-    calculateServoAngles(100, 50, 150); // Move to position (100, 50, 150)
-    delay(1000);
-    calculateServoAngles(50, 100, 150); // Move to position (50, 100, 150)
-    delay(1000);
-    calculateServoAngles(0, 0, 150); // Move to position (0, 0, 150)
-    delay(1000);
- }
- */
-/* OLDER OLD
-  pwm.setPWM(0, 0, turnValue);
-  pwm.setPWM(0, 0, moveValue);
-  pwm.setPWM(1, 0, turnValue);
-  pwm.setPWM(1, 0, moveValue);
-  pwm.setPWM(2, 0, turnValue);
-  pwm.setPWM(2, 0, moveValue);
-  pwm.setPWM(3, 0, turnValue);
-  pwm.setPWM(3, 0, moveValue);
-  pwm.setPWM(4, 0, turnValue);
-  pwm.setPWM(4, 0, moveValue);
-  pwm.setPWM(5, 0, turnValue);
-  pwm.setPWM(5, 0, moveValue);
-  */
-  
   /* MORE DRIVING THE ROBOT STUFF */
   /*
   The remote control transmitter sends a number between 900 and 2000 for the
@@ -356,7 +330,7 @@ void loop() {
     }
 }
 
-else if (leftPulseDuration < 1525 && leftPulseDuration > 1410) {
+else if (leftPulseDuration < 1675 && leftPulseDuration > 1285) {
   if (rightPulseDuration < 1000 && rightPulseDuration > 985) {
       // Spin the robot left
       Serial.println("\nSpin Left");
