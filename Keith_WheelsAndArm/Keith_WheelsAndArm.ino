@@ -68,9 +68,6 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 #define Y_MAX 2000
 #define Y_MIN 1000
 
-// our servo # counter
-uint8_t servonum = 0;
-
 /* FrSky V8FR-II 2.4GHz Receiver */
 // define pins for servo controls (left remote control stick)
 const int Channel3 = 9;
@@ -78,28 +75,20 @@ const int Channel4 = 10;
 const int Channel5 = 11;
 const int Channel6 = 12;
 
-// from servo arm tutorial, currently unused?
-boolean stop_state = true;
-
 // define pins for robot driving controls (right remote control stick)
 const int leftPin = 7;
 const int rightPin = 8;
 
-// define pin to tie high +5V to power servo shield board
-const int servoPowerPin = 13;
-
-/*
-// variables in which to store the pulse width info coming from the remote
-// to be used to control the robotic arm
-int ch3; 
-int ch4; 
-*/
-
 // servo movement variables
 int xPos = 0;
 int yPos = 0;
+int xArmPos = 0;
+int yArmPos = 0;
 int xBasePos = 0;
 int yBasePos = 0;
+
+int minAngle = 0;  // Minimum angle for the servo
+int maxAngle = 180;  // Maximum angle for the servo
 
 /*
 defining pins for six motor driver boards...
@@ -199,10 +188,6 @@ void setup() {
   pinMode(RR_Prwm, OUTPUT);
   pinMode(RR_Lpwm, OUTPUT);
 
-  // Power the servo shield board
-  pinMode(servoPowerPin, OUTPUT);
-  digitalWrite(servoPowerPin, HIGH);
-
   // set up serial communication for debugging
   Serial.begin(9600);
 }
@@ -217,10 +202,10 @@ void loop() {
  
  
   // print the pulse durations for debugging
-  Serial.print("\nLeft: ");
-  Serial.print(leftPulseDuration);
-  Serial.print("\nRight: ");
-  Serial.print(rightPulseDuration);
+  // Serial.print("\nLeft: ");
+  // Serial.print(leftPulseDuration);
+  // Serial.print("\nRight: ");
+  // Serial.print(rightPulseDuration);
   
   /* ROBOTIC ARM STUFF */
   // read the duration of the pulses that control robotic arm
@@ -228,7 +213,13 @@ void loop() {
   int ch4 = pulseIn(Channel4, HIGH);
   int ch5 = pulseIn(Channel5, HIGH);
   int ch6 = pulseIn(Channel6, HIGH);
-
+  // xArmPos = map(ch3, 980, 1999, 150, 1999); //center over zero
+  // xArmPos = constrain(xArmPos, 150, 1999);
+  xArmPos = map(ch3, 0, 2047, 0, 2047); //center over zero
+  //xPos = constrain(xPos, 300, 3400);                                   
+  // yArmPos = map(ch4, 980, 1999, 600, 2400);
+  // yArmPos = constrain(yArmPos, 600, 2400);
+  yArmPos = map(ch4, 0, 2047, 0, 2047);
   xPos = map(ch5, 980, 1999, 150, 1999); //center over zero
   xPos = constrain(xPos, 150, 1999);
   //xPos = constrain(xPos, 300, 3400);                                   
@@ -238,19 +229,31 @@ void loop() {
   //Serial.println("channel 6 = " + String(ch6));
   //Serial.println("xPos = " + String(ch3));
   //Serial.println("yPos = " + String(ch4) + "\n");
-  xBasePos = map(ch6, 980, 1999, 150, 1999); //center over zero
+  xBasePos = map(ch3, 980, 1999, 150, 1999); //center over zero
   xBasePos = constrain(xBasePos, 150, 1999);
   //xBasePos = constrain(xBasePos, 300, 3400);                                   
-  yBasePos = map(ch6, 980, 1999, 600, 2400);
+  yBasePos = map(ch4, 980, 1999, 600, 2400);
   yBasePos = constrain(yBasePos, 600, 2400);
+  
+
+  int mappedAngle = map(ch6, 0, 1023, minAngle, maxAngle);  // Map the x position to the servo angle
+  //mappedAngle = constrain(mappedAngle, 0, 1023);
+  Serial.println("baseAngle = " + String(mappedAngle) + "\n");
+  // xBasePos = map(ch6, 980, 1999, 0, 180); 
+  // xBasePos = constrain(xBasePos, 0, 180); 
+
+  // yBasePos = map(ch6, 980, 1999, 0, 180); 
+  // yBasePos = constrain(yBasePos, 0, 180); 
+  
   /*
   Serial.print("\nxBasePos: ");
   Serial.print(xBasePos);
   Serial.print("\nyBasePos: ");
   Serial.print(yBasePos);
   */
-  moveBase(xBasePos, xBasePos);
-  moveArm(xPos, yPos);
+  moveBase(mappedAngle);
+  moveClaw(xPos, yPos);
+  moveArm(xArmPos, yArmPos);
 
  /* NEWER OLD
  for (int i = 0; i < 10; i++) {
@@ -557,7 +560,7 @@ float toDegrees(float rad) {
 }
 */
 
-void moveArm(int x, int y) {
+void moveClaw(int x, int y) {
   double L1 = 40.0; // Length of the first arm
   double L2 = 30.0; // Length of the second arm
 
@@ -584,7 +587,11 @@ void moveArm(int x, int y) {
   //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
 }
 
-void moveBase(int x, int y) {
+void moveBase(int x) {
+  pwm.setPWM(PRONATION_SERVO, 0, x);
+}
+
+void moveArm(int x, int y) {
   double L1 = 40.0; // Length of the first arm
   double L2 = 30.0; // Length of the second arm
 
@@ -597,14 +604,14 @@ void moveBase(int x, int y) {
   int shoulderAngle = map(angle2_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
   int elbowAngle = map(angle3_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
 
- //pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
- // pwm.setPWM(WRIST_SERVO, 0, baseAngle);
- // pwm.setPWM(ELBOW_SERVO, 0, baseAngle);
+  //pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
+  // pwm.setPWM(WRIST_SERVO, 0, baseAngle);
+  pwm.setPWM(ELBOW_SERVO, 0, elbowAngle);
   //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
- //pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
-pwm.setPWM(BASE_SERVO, 0, baseAngle);
+  pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
+  //pwm.setPWM(BASE_SERVO, 0, baseAngle);
 
-  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
+  pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
 
   //Serial.println("baseAngle = " + String(baseAngle) + "\n");
   //Serial.println("shoulderAngle = " + String(shoulderAngle) + "\n");
