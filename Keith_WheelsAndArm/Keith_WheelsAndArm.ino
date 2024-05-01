@@ -79,6 +79,9 @@ const int Channel6 = 12;
 const int leftPin = 7;
 const int rightPin = 8;
 
+// speaker
+const int speaker0 = 53;
+
 // servo movement variables
 int xPos = 0;
 int yPos = 0;
@@ -188,11 +191,15 @@ void setup() {
   pinMode(RR_Prwm, OUTPUT);
   pinMode(RR_Lpwm, OUTPUT);
 
+  // speaker
+  pinMode(speaker0, OUTPUT);
+
   // set up serial communication for debugging
   Serial.begin(9600);
 }
 
 void loop() {
+  digitalWrite(speaker0, LOW);
   /* DRIVING THE ROBOT STUFF */
   // read the duration of the pulse on the left signal pin
   int leftPulseDuration = pulseIn(leftPin, HIGH);
