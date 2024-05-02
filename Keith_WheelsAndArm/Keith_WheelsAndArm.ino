@@ -79,8 +79,15 @@ const int Channel6 = 12;
 const int leftPin = 7;
 const int rightPin = 8;
 
-// speaker
-const int speaker0 = 53;
+// ardunio pins used to trigger sounds
+const int sound0 = 44;
+const int sound1 = 45;
+const int sound2 = 46;
+const int sound3 = 47;
+const int sound4 = 48;
+const int sound5 = 49;
+const int sound6 = 51;
+const int sound7 = 52;
 
 // servo movement variables
 int xPos = 0;
@@ -191,15 +198,19 @@ void setup() {
   pinMode(RR_Prwm, OUTPUT);
   pinMode(RR_Lpwm, OUTPUT);
 
-  // speaker
-  pinMode(speaker0, OUTPUT);
+  pinMode(44, OUTPUT);
+  pinMode(46, OUTPUT);
+  pinMode(48, OUTPUT);
+  pinMode(50, OUTPUT);
+  pinMode(52, OUTPUT);
 
   // set up serial communication for debugging
   Serial.begin(9600);
 }
 
 void loop() {
-  digitalWrite(speaker0, LOW);
+  // sayKeith();
+  // closingClaw();
   /* DRIVING THE ROBOT STUFF */
   // read the duration of the pulse on the left signal pin
   int leftPulseDuration = pulseIn(leftPin, HIGH);
@@ -222,11 +233,14 @@ void loop() {
   int ch6 = pulseIn(Channel6, HIGH);
   // xArmPos = map(ch3, 980, 1999, 150, 1999); //center over zero
   // xArmPos = constrain(xArmPos, 150, 1999);
-  xArmPos = map(ch3, 0, 2047, 0, 2047); //center over zero
+  yArmPos = map(ch3, 0, 1023, 0, 180); //center over zero
   //xPos = constrain(xPos, 300, 3400);                                   
   // yArmPos = map(ch4, 980, 1999, 600, 2400);
   // yArmPos = constrain(yArmPos, 600, 2400);
-  yArmPos = map(ch4, 0, 2047, 0, 2047);
+  xArmPos = map(ch4, 0, 1023, 0, 180);
+ // Serial.println("\nxArmPos = " + String(xArmPos) + "\n");
+ // Serial.println("yArmPos = " + String(yArmPos) + "\n");
+
   xPos = map(ch5, 980, 1999, 150, 1999); //center over zero
   xPos = constrain(xPos, 150, 1999);
   //xPos = constrain(xPos, 300, 3400);                                   
@@ -260,8 +274,8 @@ void loop() {
   */
   moveBase(mappedAngle);
   moveClaw(mappedClawAngle);
-  moveArm(xArmPos, yArmPos);
-
+  moveArm2(xArmPos, yArmPos);
+  moveArm3(xArmPos, yArmPos);
   /* MORE DRIVING THE ROBOT STUFF */
   /*
   The remote control transmitter sends a number between 900 and 2000 for the
@@ -275,7 +289,7 @@ void loop() {
   if (leftPulseDuration < 1510 && leftPulseDuration > 1495) {
     if (rightPulseDuration < 1500 && rightPulseDuration > 1480) {
       // both signals are low, stop the robot
-      Serial.println("\nStop");
+      //Serial.println("\nStop");
       int leftPulseDuration = pulseIn(leftPin, LOW);
       int rightPulseDuration = pulseIn(rightPin, LOW);
       digitalWrite(LF_R_En, LOW);
@@ -334,13 +348,15 @@ void loop() {
       analogWrite(LR_Lpwm, 255);
       analogWrite(RR_Prwm, 255);
       analogWrite(RR_Lpwm, 0);
+
+      digitalWrite(sound7, HIGH); // play sound
     }
 }
 
 else if (leftPulseDuration < 1675 && leftPulseDuration > 1285) {
   if (rightPulseDuration < 1000 && rightPulseDuration > 985) {
       // Spin the robot left
-      Serial.println("\nSpin Left");
+    Serial.println("\nSpin Left");
 
     digitalWrite(LF_R_En, HIGH);
     digitalWrite(LF_L_En, HIGH);
@@ -542,11 +558,12 @@ float toDegrees(float rad) {
 */
 
 void moveClaw(int x) {
- pwm.setPWM(CLAW_SERVO, 0, x); 
+ pwm.setPWM(CLAW_SERVO, 0, x);
 }
 
 void moveBase(int x) {
   pwm.setPWM(PRONATION_SERVO, 0, x);
+
 }
 
 void moveArm(int x, int y) {
@@ -563,16 +580,61 @@ void moveArm(int x, int y) {
   int elbowAngle = map(angle3_rad * 180 / M_PI, 0, 180, SERVOMIN, SERVOMAX);
 
   //pwm.setPWM(CLAW_SERVO, 0, baseAngle); // Move the servos to the calculated positions
-  pwm.setPWM(WRIST_SERVO, 0, shoulderAngle);
-  pwm.setPWM(ELBOW_SERVO, 0, elbowAngle);
+  //pwm.setPWM(WRIST_SERVO, 0, shoulderAngle);
+  pwm.setPWM(ELBOW_SERVO, 0, shoulderAngle);
   //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
-  pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
-  pwm.setPWM(BASE_SERVO, 0, baseAngle);
+  //pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
+  //pwm.setPWM(BASE_SERVO, 0, baseAngle);
 
-  pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
+  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
 
   //Serial.println("baseAngle = " + String(baseAngle) + "\n");
   //Serial.println("shoulderAngle = " + String(shoulderAngle) + "\n");
   //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
+}
+
+void moveArm2(int x, int y) {
+  int xAngle = map(x, 0, 1023, 0, 180); // Map x value to servo angle
+
+  int yAngle = map(y, 0, 1023, 0, 180); // Map y value to servo angle
+  
+  pwm.setPWM(ELBOW_SERVO, 0, x);
+  //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
+  //pwm.setPWM(SHOULDER_SERVO, 0, baseAngle);
+  //pwm.setPWM(BASE_SERVO, 0, baseAngle);
+
+  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
+
+  //Serial.println("baseAngle = " + String(baseAngle) + "\n");
+  //Serial.println("shoulderAngle = " + String(shoulderAngle) + "\n");
+  //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
+}
+void moveArm3(int x, int y) {
+  int xAngle = map(x, 0, 1023, 0, 180); // Map x value to servo angle
+
+  int yAngle = map(y, 0, 1023, 0, 180); // Map y value to servo angle
+  
+  //pwm.setPWM(ELBOW_SERVO, 0, x);
+  //pwm.setPWM(PRONATION_SERVO, 0, baseAngle);
+  pwm.setPWM(SHOULDER_SERVO, 0, y);
+  //pwm.setPWM(BASE_SERVO, 0, baseAngle);
+
+  //pwm.setPWM(ELBOW2_SERVO, 0, elbowAngle);
+
+  //Serial.println("baseAngle = " + String(baseAngle) + "\n");
+  //Serial.println("shoulderAngle = " + String(shoulderAngle) + "\n");
+  //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
+}
+
+void closingClaw(void) {
+  digitalWrite(52, HIGH);
+  delay(3000);
+  digitalWrite(52, LOW);
+}
+
+void sayKeith(void) {
+  digitalWrite(44, HIGH);
+    delay(3000);
+  digitalWrite(44, LOW);
 }
 
