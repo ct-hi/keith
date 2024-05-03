@@ -80,14 +80,8 @@ const int leftPin = 7;
 const int rightPin = 8;
 
 // ardunio pins used to trigger sounds
-const int sound0 = 44;
-const int sound1 = 45;
-const int sound2 = 46;
-const int sound3 = 47;
-const int sound4 = 48;
-const int sound5 = 49;
-const int sound6 = 51;
-const int sound7 = 52;
+// const int playSnd = 50;
+// const int resetSnd = 52;
 
 // servo movement variables
 int xPos = 0;
@@ -198,11 +192,8 @@ void setup() {
   pinMode(RR_Prwm, OUTPUT);
   pinMode(RR_Lpwm, OUTPUT);
 
-  pinMode(44, OUTPUT);
-  pinMode(46, OUTPUT);
-  pinMode(48, OUTPUT);
-  pinMode(50, OUTPUT);
-  pinMode(52, OUTPUT);
+  // pinMode(playSnd, OUTPUT);
+  // pinMode(resetSnd, OUTPUT);
 
   // set up serial communication for debugging
   Serial.begin(9600);
@@ -272,6 +263,7 @@ void loop() {
   Serial.print("\nyBasePos: ");
   Serial.print(yBasePos);
   */
+
   moveBase(mappedAngle);
   moveClaw(mappedClawAngle);
   moveArm2(xArmPos, yArmPos);
@@ -348,8 +340,6 @@ void loop() {
       analogWrite(LR_Lpwm, 255);
       analogWrite(RR_Prwm, 255);
       analogWrite(RR_Lpwm, 0);
-
-      digitalWrite(sound7, HIGH); // play sound
     }
 }
 
@@ -626,15 +616,15 @@ void moveArm3(int x, int y) {
   //Serial.println("elbowAngle = " + String(elbowAngle) + "\n\n");
 }
 
-void closingClaw(void) {
-  digitalWrite(52, HIGH);
-  delay(3000);
-  digitalWrite(52, LOW);
-}
+// void closingClaw(void) {
+//   digitalWrite(52, HIGH);
+//   delay(3000);
+//   digitalWrite(52, LOW);
+// }
 
-void sayKeith(void) {
-  digitalWrite(44, HIGH);
-    delay(3000);
-  digitalWrite(44, LOW);
-}
+// void sayKeith(void) {
+//   digitalWrite(44, HIGH);
+//     delay(3000);
+//   digitalWrite(44, LOW);
+// }
 
